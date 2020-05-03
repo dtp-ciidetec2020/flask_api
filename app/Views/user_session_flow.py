@@ -1,3 +1,6 @@
+import logging
+
+
 from flask import Blueprint
 from flask import jsonify
 from flask import request
@@ -9,32 +12,37 @@ from flask_jwt_extended import ( jwt_required, create_access_token, get_jwt_iden
 
 from app import bcrypt
 
-user_flow = Blueprint('user_flow',__name__,)
+user_flow = Blueprint('user_flow',__name__)
 
 
 @user_flow.route('/', methods=['GET'])
 def hello():
     return jsonify({"hola":"mundo"})
 
-@user_flow.route('/login', methods = ['POST'])
+@user_flow.route('/login', methods = ['GET', 'POST'])
 def login():
 
     username = request.json.get('username', None)
     password = request.json.get('password', None)
+
+    jwt_token = None
     if username is not None and password is not None:
         query_user  = UserAccount.objects(username = username)
+
         if query_user:
             pwd_is_true = bcrypt.check_password_hash(query_user.password, password)
             if pwd_is_true:
                 jwt_token = create_access_token(identity = username+password)  
-    return jsonify(jwt_token=jwt_token),200
+    
+
+    return jsonify(token=jwt_token),200
 
 
-@user_flow.route('/register', methods = ['POST'])
+@user_flow.route('/register', methods = ['GET','POST'])
 def register():
     status = None
     req = request.get_json()
-    user =  UserAccount(username = req['username'], password =  bcrypt.generate_password_has(req['password']).decode('utf-8'), email = req['email'])
+    user =  UserAccount(username = req['username'], password = bcrypt.generate_password_hash(req['password']).decode('utf-8'), email = req['email'])
     try:
         user.save()
         status = "created",201
