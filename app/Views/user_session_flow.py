@@ -1,6 +1,8 @@
 import logging
 
 
+from bson.json_util import dumps
+
 from flask import Blueprint
 from flask import jsonify
 from flask import request
@@ -25,16 +27,17 @@ def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
 
+
     jwt_token = None
     if username is not None and password is not None:
-        query_user  = UserAccount.objects(username = username)
-
+        query_user = [ query_user for query_user in UserAccount.objects(username = username) ][0]
         if query_user:
             pwd_is_true = bcrypt.check_password_hash(query_user.password, password)
             if pwd_is_true:
-                jwt_token = create_access_token(identity = username+password)  
+                jwt_token = create_access_token(identity = {"username":query_user.username, "id":dumps(query_user.id) }   ) 
+            else:
+                jwt_token = "password or username incorrect"
     
-
     return jsonify(token=jwt_token),200
 
 

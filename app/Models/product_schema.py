@@ -4,21 +4,24 @@ from flask import jsonify
 
 class Product(Document):
 
-    product_name = StringField(required= True)
-    is_new_product = BooleanField(required = True)
-    is_known_product = BooleanField(required = True)
-    num_of_wished_surveys = IntField(required = True)
+    product_name = StringField()
+    is_new_product = BooleanField()
+    is_known_product = BooleanField()
+    num_of_wished_surveys = IntField()
     user_id = ReferenceField('UserAccount')
 
 
 class ProductPhase(Document):
 
-    is_interview = BooleanField()
-    is_derivation = BooleanField()
-    is_classification = BooleanField()
-    is_final = BooleanField()
+    """
+    Esta coleccion se  tiene que crear cuando un producto es creado
+    """
+    
+    is_interview_done = BooleanField(default=False)
+    is_derivation_done = BooleanField(default=False)
+    is_classification_done = BooleanField(default=False)
+    is_final_done = BooleanField(default=False)
     product_id = ReferenceField('Product')
-
 
 
 class InterviewPhase(Document):

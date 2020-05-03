@@ -20,5 +20,9 @@ def create_app(config):
 	db.init_app(app)
 
 	from  app.Views.user_session_flow  import user_flow
+	from  app.Views.product_creation_flow import product_creation_flow
+
 	app.register_blueprint(user_flow)
+	app.register_blueprint(product_creation_flow)
+	
 	return app
