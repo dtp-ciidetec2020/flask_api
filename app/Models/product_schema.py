@@ -11,7 +11,7 @@ class Product(Document):
     user_id = ReferenceField('UserAccount')
 
 
-class ProductPhase(Document):
+class ProductPhaseStatus(Document):
 
     """
     Esta coleccion se  tiene que crear cuando un producto es creado
@@ -27,17 +27,17 @@ class ProductPhase(Document):
 class InterviewPhase(Document):
     
     market = StringField(required = True)
-    male = BooleanField()
-    female = BooleanField()
+    male = BooleanField(default=False)
+    female = BooleanField(default=False)
     age_range = ListField(required = True)
     description = StringField(required = True)
     product_id = ReferenceField('Product')
 
-class Derivation(Document):
+class AttributesDerivation(Document):
     attributes = ListField(required = True)
     product_id = ReferenceField('Product')
 
 class FinalAttributes(Document):
     final_attributes = ListField(required = True)
-    product_id = ReferenceField('Product')
+    product_id = ReferenceField('Product', unique=True)
 

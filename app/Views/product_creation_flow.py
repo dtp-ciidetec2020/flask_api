@@ -5,7 +5,9 @@ from flask import jsonify
 
 from bson.json_util import dumps, loads
 
-from app.Models.product_schema import Product, ProductPhase
+from app.Models.product_schema import (
+    Product, ProductPhaseStatus, InterviewPhase,AttributesDerivation, FinalAttributes
+)
 
 from app.Models.user_schema import UserAccount
 
@@ -53,7 +55,7 @@ def create_product():
         try:
             new_product.save()
             try:
-                ProductPhase(product_id = new_product.id).save()
+                ProductPhaseStatus(product_id = new_product.id).save()
             except:
                 status = "something odd just happened"
             status = "created",201
@@ -69,15 +71,91 @@ def create_product_status(product_id):
 
     status = None
 
-    product = map(lambda product: product.id, Product.objects(id=product))
-    product = list(product)
-    product = product[0]
-
-    product_phases_status = ProductPhase.objects(product_id =  product)
-
+    product_phases_status = ProductPhaseStatus.objects(product_id =  product_id)
 
     return jsonify(status=product_phases_status)
 
 @product_creation_flow.route('/product-creation/<product_id>/interview-phase', methods=['POST'])
+@jwt_required
 def create_product_interview(product_id):
-    pass
+    
+    status = None
+
+    interview_phase_obj = InterviewPhase(
+        market = request.json.get('market',None),
+        male = request.json.get('male', None),
+        female = request.json.get('female',None),
+        age_range = request.json.get('age_range',None),
+        description = request.json.get('description', None),
+        product_id = product_id
+    )
+    try:
+        interview_phase_obj.save()
+        status = "created"
+        try:
+            product_phases_status = ProductPhaseStatus.objects(product_id = product_id )
+            product_phases_status.update(is_interview_done = True)
+        except:
+            status = "error"
+    except:
+        status ="something went wrong"
+
+    return jsonify(status=status),200
+
+@product_creation_flow.route('/product-creation/<product_id>/attributes-derivation',methods=['POST'])
+@jwt_required
+def create_product_attributes_derivation(product_id):
+    status = None
+    attributes_list = AttributesDerivation(attributes=request.json.get('attributes',None), product_id = product_id)
+    try:
+        attributes_list.save()
+        status = "created",201
+        try:
+            product_phases_status = ProductPhaseStatus.objects(product_id = product_id)
+            product_phases_status.update(is_derivation_done = True)
+        except:
+            status = "error"
+    except:
+        status="error"
+    
+    return jsonify(status=status)
+
+@product_creation_flow.route('/product-creation/<product_id>/show-attributes', methods=['GET'])
+@jwt_required
+def create_product_show_attributes(product_id):
+
+    attributes_list = AttributesDerivation.objects(product_id = product_id)
+    
+    return jsonify(attributes=attributes_list)
+
+@product_creation_flow.route('/product-creation/<product_id>/post-to-final', methods=['POST'])
+@jwt_required
+def create_product_final_attributes(product_id):
+
+    status = None
+    
+    fattributes = FinalAttributes(final_attributes = request.json.get('attributes',None), product_id= product_id)
+    
+    try:
+        fattributes.save()
+        status = "created",201
+        try:
+            product_phases_status =  ProductPhaseStatus.objects(product_id = product_id)
+            product_phases_status.update(is_classification_done = True, is_final_done = True)
+        except:
+            status = "something went wrong"
+    except:
+        status = "product already exist"
+    return jsonify(status=status)
+
+@product_creation_flow.route('/product-creation/<product_id>/show-final-attributes',methods=['GET'])
+@jwt_required
+def create_product_show_final_attributes(product_id):
+    status = None
+    fattributes = FinalAttributes.objects(product_id = product_id)
+    
+    return jsonify(attributes = fattributes),200
+
+"""
+Delete some collections if change opinion?
+"""
